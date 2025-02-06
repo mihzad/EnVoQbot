@@ -98,7 +98,7 @@ namespace EnVoQbot.BotCommands
 
             InlineButtons = CreateInlineScheduleDaysKeyboard();
 
-            var sending = BotClient.Bot.SendTextMessageAsync(
+            var sending = BotClient.Bot.SendMessage(
                 chatId: ChatID,
                 text: "Choose which days you want\n to receive the quizzes:",
                 replyMarkup: new InlineKeyboardMarkup(InlineButtons)
@@ -163,7 +163,7 @@ namespace EnVoQbot.BotCommands
                     }  
             }
             
-            var sending = BotClient.Bot.EditMessageReplyMarkupAsync(
+            var sending = BotClient.Bot.EditMessageReplyMarkup(
                 chatId: update!.CallbackQuery!.Message!.Chat.Id,
                 messageId: update.CallbackQuery.Message!.MessageId,
                 replyMarkup: new InlineKeyboardMarkup(InlineButtons!)
@@ -184,7 +184,7 @@ namespace EnVoQbot.BotCommands
         }
         private async Task AskQuizzesCountForCurrentScheduledDay(Update update)
         {
-            var askingForQuizzesCount = BotClient.Bot.SendTextMessageAsync(
+            var askingForQuizzesCount = BotClient.Bot.SendMessage(
                     chatId: ChatID,
                     text: $"Now type how many quizzes you would like to receive on {currentScheduledDay!.dayName}.\n" +
                     "Type a number between 1 and 100.\n" +
@@ -223,7 +223,7 @@ namespace EnVoQbot.BotCommands
 
         private async Task ConfirmScheduleUpdating(Update update)
         {
-            var confirming = BotClient.Bot.SendTextMessageAsync(
+            var confirming = BotClient.Bot.SendMessage(
                 chatId: ChatID,
                 text:   "Are you sure you want to set new schedule?\n" +
                         "New schedule will be applied and the old one will be deleted.\n" +
@@ -238,7 +238,7 @@ namespace EnVoQbot.BotCommands
         }
         private async Task AskTimerForNewScheduledDay(Update update)
         {
-            var askingForScheduleTime = BotClient.Bot.SendTextMessageAsync(
+            var askingForScheduleTime = BotClient.Bot.SendMessage(
                     chatId: ChatID,
                     text: $"Now type time you would like to receive your tests on {currentScheduledDay!.dayName}.\n" +
                     "Enter time in 24-hours format, hours and minutes:\n" +
@@ -256,7 +256,7 @@ namespace EnVoQbot.BotCommands
         {
             if (update.Message!.Text != "Yes, i am sure.")
             {
-                var sendingResponce = BotClient.Bot.SendTextMessageAsync(
+                var sendingResponce = BotClient.Bot.SendMessage(
                     chatId: ChatID,
                     text: "The scheduling was canceled.\n" +
                             "See /help for instructions."
@@ -302,7 +302,7 @@ namespace EnVoQbot.BotCommands
                     await BotClient.QuizzesScheduler!.ScheduleJob(userJob, dayTrigger);
                 }
             }
-            var sendingDoneResponce = BotClient.Bot.SendTextMessageAsync(
+            var sendingDoneResponce = BotClient.Bot.SendMessage(
                     chatId: ChatID,
                     text: "Your quizzes schedule was successfully set up.\n" +
                          $"Current time zone: {userTimeZone!.DisplayName}.\n" +
@@ -334,7 +334,7 @@ namespace EnVoQbot.BotCommands
                 var zoneInfo = await getTimeZoneCommand.ExecuteScalarAsync();
                 if (zoneInfo == null || zoneInfo == DBNull.Value)
                 {
-                    var sendingNoTimeZoneResponce = BotClient.Bot.SendTextMessageAsync(
+                    var sendingNoTimeZoneResponce = BotClient.Bot.SendMessage(
                         chatId: ChatID,
                         text: "You haven`t set your time zone.\n" +
                         " Please, use /settimezone before setting schedule."
@@ -378,7 +378,7 @@ namespace EnVoQbot.BotCommands
             {
                 if (dayData.isDayScheduled)
                 {
-                    var askingForScheduleTime = BotClient.Bot.SendTextMessageAsync(
+                    var askingForScheduleTime = BotClient.Bot.SendMessage(
                     chatId: update.CallbackQuery!.Message!.Chat.Id,
                     text: $"Now type time you would like to receive your tests on {dayData.dayName}.\n" +
                     "Enter time in 24-hours format, hours and minutes:\n" +
@@ -395,7 +395,7 @@ namespace EnVoQbot.BotCommands
                 }
             }
 
-            var informingThereIsNoDayChosen = BotClient.Bot.SendTextMessageAsync(
+            var informingThereIsNoDayChosen = BotClient.Bot.SendMessage(
                 chatId: update.CallbackQuery!.Message!.Chat.Id,
                 text: "No schedule added because no day to schedule was chosen."
                 );

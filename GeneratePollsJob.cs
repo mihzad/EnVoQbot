@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
 namespace EnVoQbot
 {
     internal class GeneratePollsJob : IJob
@@ -29,7 +28,7 @@ namespace EnVoQbot
 
                 if (userVocabulary == null)
                 {
-                    await BotClient.Bot.SendTextMessageAsync(
+                    await BotClient.Bot.SendMessage(
                             chatId: chatID,
                             text: "You have less than three words in your vocabulary.\n" +
                             " Add some more if you want me to create quizzes."
@@ -102,7 +101,7 @@ namespace EnVoQbot
 
             int[] possibleAnswersIndexes = new int[quizAnswersCount];
             //possibleAnswersIndexes stores index number in userVocabulary for each word used as answer in the quiz.
-            string[] possibleAnswers = new string[quizAnswersCount]; // stores answers (word translations)
+            string[] possibleAnswerStrings = new string[quizAnswersCount]; // stores answers (word translations)
 
             //choose correct answer
             var correctAnswerIndex = randomizer.Next(userVocabulary.Length);// 0 <= correctAnswerIndex < userVocabularySize
@@ -122,17 +121,22 @@ namespace EnVoQbot
             }
 
             for (int i = 0; i < quizAnswersCount; i++)
-                possibleAnswers[i] = userVocabulary[possibleAnswersIndexes[i]].Translation!;
+                possibleAnswerStrings[i] = userVocabulary[possibleAnswersIndexes[i]].Translation!;
 
-            Shuffle(randomizer, possibleAnswers);
+            Shuffle(randomizer, possibleAnswerStrings);
 
-            await BotClient.Bot.SendPollAsync(
+            //Convert strings to InputPollOption accorging to the new tgbotapi version
+            InputPollOption[] possibleAnswers = new InputPollOption[quizAnswersCount];
+            for (int i = 0; i < quizAnswersCount; i++)
+                possibleAnswers[i] = new InputPollOption(possibleAnswerStrings[i]);
+
+            await BotClient.Bot.SendPoll(
                 chatId: chatID,
                 question: $"What is correct translation of {correctAnswerData.Spelling} [{correctAnswerData.Transcription}]?",
                 options: possibleAnswers,
                 isAnonymous: true,
                 type: PollType.Quiz,
-                correctOptionId: FindId(possibleAnswers, correctAnswerData.Translation!), // answers are translations, so we use translation to find.
+                correctOptionId: FindId(possibleAnswerStrings, correctAnswerData.Translation!), // answers are translations, so we use translation to find.
                 explanation: "there i will explain smth",
                 explanationParseMode: ParseMode.Html,
                 protectContent: true

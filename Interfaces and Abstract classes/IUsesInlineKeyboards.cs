@@ -14,7 +14,7 @@ namespace EnVoQbot
         {
             if (MessageWithInlineKeyboardToDelete != null && HasInlineKeyboardActivated == true)
             {
-                var deleting = BotClient.Bot.EditMessageTextAsync(
+                var deleting = BotClient.Bot.EditMessageText(
                 chatId: MessageWithInlineKeyboardToDelete!.Chat!.Id,
                 messageId: MessageWithInlineKeyboardToDelete.MessageId,
                 text: MessageWithInlineKeyboardToDelete.Text! + $" ({actionInfo})"
