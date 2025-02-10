@@ -1,0 +1,23 @@
+USE [EnVoQbot_DB]
+GO
+
+/****** Object:  Table [dbo].[EnglishWords]    Script Date: 10.02.2025 11:21:51 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[EnglishWords](
+	[WordID] [bigint] IDENTITY(1,1) NOT NULL,
+	[Spelling] [nvarchar](max) NOT NULL,
+	[Transcription] [nvarchar](max) NOT NULL,
+	[NumberOfUsersCurrentlyUsing] [int] NOT NULL,
+ CONSTRAINT [PK_EnglishWords] PRIMARY KEY CLUSTERED 
+(
+	[WordID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+
