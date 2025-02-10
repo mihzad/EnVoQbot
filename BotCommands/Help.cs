@@ -12,12 +12,9 @@ namespace EnVoQbot.BotCommands
     {
         internal override async  Task ExecuteAsync(Update update)
         {
-            await BotClient.Bot.SendTextMessageAsync(
+            await BotClient.Bot.SendMessage(
                    chatId: update!.Message!.Chat.Id,
-                   text: "So, here's the list of detailed descriptions of my commands:\n\n" +
-                   "/start\n" +
-                   "Just an introduction. It makes sense only the first time you use it,\n" +
-                   "lets me to remember you.\n\n" +
+                   text: "Here's the list of detailed descriptions of my commands:\n\n" +
 
                    "/newword\n" +
                    "trarara"

@@ -11,11 +11,11 @@ namespace EnVoQbot.BotCommands
 
         internal override async Task ExecuteAsync(Update update)
         {
-            var messageSending = BotClient.Bot.SendTextMessageAsync(
+            var messageSending = BotClient.Bot.SendMessage(
                     chatId: update!.Message!.Chat.Id,
                     text: $"Hello, {update!.Message!.From!.FirstName}!\n" +
                     " I can generate quizzes using words you specified.\n" +
-                    " Whenever you want and almost as much as you want.\n" +
+                    " Whenever you want and as much as you want.\n" +
                     "Type /help for further information about commands."
                     );
             using (SqlConnection connection = new SqlConnection(ConnectionsData.DBconnectionString))

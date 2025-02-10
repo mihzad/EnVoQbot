@@ -121,7 +121,7 @@ namespace EnVoQbot.BotCommands
         {
             if (buttons.Count == 0)
             {
-                await BotClient.Bot.SendTextMessageAsync(
+                await BotClient.Bot.SendMessage(
                         chatId: update!.Message!.Chat.Id,
                         text: "Your vocabulary is empty. Nothing to delete.\n" +
                                 "See /help for instructions."
@@ -132,7 +132,7 @@ namespace EnVoQbot.BotCommands
             {
                 InlineKeyboardMarkup markup = new InlineKeyboardMarkup(buttons);
 
-                var dataRequesting = BotClient.Bot.SendTextMessageAsync(
+                var dataRequesting = BotClient.Bot.SendMessage(
                     chatId: update!.Message!.Chat.Id,
                     text: "Delete a word? Alright.\n" +
                             "Choose one from your vocabulary:"
@@ -149,7 +149,7 @@ namespace EnVoQbot.BotCommands
         #endregion
         private async Task ConfirmDeletionAsync(Update update)
         {
-            var confirmationMessageSending = BotClient.Bot.SendTextMessageAsync(
+            var confirmationMessageSending = BotClient.Bot.SendMessage(
                 chatId: update.CallbackQuery!.Message!.Chat.Id,
                 text: "Are you sure? Type \"Yes, i am sure.\" if you are.\n" +
                 "Otherwise command will be automatically canceled."
@@ -170,7 +170,7 @@ namespace EnVoQbot.BotCommands
         {
             if(update.Message!.Text != "Yes, i am sure.")
             {
-                await BotClient.Bot.SendTextMessageAsync(
+                await BotClient.Bot.SendMessage(
                     chatId: update.Message!.Chat.Id,
                     text: "The deletion was canceled.\n" +
                             "See /help for instructions."
@@ -206,7 +206,7 @@ namespace EnVoQbot.BotCommands
 
                 var deletingWord = deleteWord.ExecuteNonQueryAsync();
 
-                await BotClient.Bot.SendTextMessageAsync(
+                await BotClient.Bot.SendMessage(
                     chatId: update.Message!.Chat.Id,
                     text: "The word was successfully deleted.\n" +
                             "See /help for instructions."

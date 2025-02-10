@@ -65,7 +65,7 @@ namespace EnVoQbot.BotCommands
                 );
             }
 
-            var sending = BotClient.Bot.SendTextMessageAsync(
+            var sending = BotClient.Bot.SendMessage(
                 chatId: ChatID,
                 text: "Choose your time zone:",
                 replyMarkup: new InlineKeyboardMarkup(inlineButtons)
@@ -99,7 +99,7 @@ namespace EnVoQbot.BotCommands
 
                 string response = await ChangeScheduleAccordingToTimeZone(update);
                 BotClient.CommandsCurrentlyExecuting.Remove(this);
-                await BotClient.Bot.SendTextMessageAsync(
+                await BotClient.Bot.SendMessage(
                 chatId: ChatID,
                 text: "New time zone was successfully set.\n" +
                       response +

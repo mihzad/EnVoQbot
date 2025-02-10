@@ -76,7 +76,7 @@ namespace EnVoQbot
                 if (update.Type == cmd.NeededUpdateType)//if there is a command to execute and it hasn`t been canceled
                     await cmd.ExecuteAsync(update);
                 else
-                    await BotClient.Bot.SendTextMessageAsync(
+                    await BotClient.Bot.SendMessage(
                         chatId: chatID,
                         text:
                         "Can`t execute another commands because this one is already being executed.\n" +
@@ -126,7 +126,7 @@ namespace EnVoQbot
         {
             if(cmd != null)
             {
-                var messageSending = BotClient.Bot.SendTextMessageAsync(
+                var messageSending = BotClient.Bot.SendMessage(
                     chatId: update!.Message!.Chat.Id,
                     text:
                     "The command has been canceled. See /help for instructions."
@@ -140,7 +140,7 @@ namespace EnVoQbot
                 await messageSending;
             }
             else
-                await BotClient.Bot.SendTextMessageAsync(
+                await BotClient.Bot.SendMessage(
                     chatId: update!.Message!.Chat.Id,
                     text:
                     "There is no command to cancel. See /help for instructions."
