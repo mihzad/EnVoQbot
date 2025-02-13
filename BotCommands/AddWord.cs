@@ -9,14 +9,14 @@ using Quartz.Util;
 
 namespace EnVoQbot.BotCommands
 {
-    internal class NewWord : MultiUpdateCommand
+    internal class AddWord : MultiUpdateCommand
     {
-        public NewWord(long userID)
+        public AddWord(long userID)
         {
             UserID = userID;
         }
 
-        private NewWordStages currentStage = NewWordStages.GetSpelling;
+        private AddWordStages currentStage = AddWordStages.GetSpelling;
 
         private long englishWordID = 0;
         private string? spelling = null;
@@ -27,11 +27,11 @@ namespace EnVoQbot.BotCommands
         {
             switch(currentStage)
             {
-                case NewWordStages.GetSpelling:
+                case AddWordStages.GetSpelling:
                     await GetSpellingAsync(update);
                     break;
 
-                case NewWordStages.ProcessSpelling:
+                case AddWordStages.ProcessSpelling:
                     await ProcessSpellingAsync(update);
                     break;
             }
@@ -44,7 +44,7 @@ namespace EnVoQbot.BotCommands
                     "OK, let`s start. Enter the english word`s spelling."
                     );
 
-            currentStage = NewWordStages.ProcessSpelling;
+            currentStage = AddWordStages.ProcessSpelling;
             //NextNeededUpdateType = UpdateType.Message, we don`t specify because it`s default.
             BotClient.CommandsCurrentlyExecuting.AddLast(this);
 

@@ -16,7 +16,7 @@ namespace EnVoQbot.BotCommands
                    chatId: update!.Message!.Chat.Id,
                    text: "Here's the list of detailed descriptions of my commands:\n\n" +
 
-                   "/newword\n" +
+                   "/addword\n" +
                    "trarara"
                    );
         }

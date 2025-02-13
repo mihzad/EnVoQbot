@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnVoQbot.MultiUpdateCommandsStagesEnums
 {
-    internal enum NewWordStages
+    internal enum AddWordStages
     {
         GetSpelling,
         ProcessSpelling
