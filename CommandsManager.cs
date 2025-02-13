@@ -49,10 +49,6 @@ namespace EnVoQbot
                                     await (new NewWord(userID)).ExecuteAsync(update);
                                     break;
 
-                                case "/editword":
-                                    await (new EditWord(userID)).ExecuteAsync(update);
-                                    break;
-
                                 case "/deleteword":
                                     await (new DeleteWord(userID)).ExecuteAsync(update);
                                     break;

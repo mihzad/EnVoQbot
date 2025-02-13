@@ -1,0 +1,45 @@
+﻿using System;
+using System.Threading.Tasks;
+using DotnetGeminiSDK.Client.Interfaces;
+using DotnetGeminiSDK.Config;
+using Newtonsoft.Json;
+using System.Text;
+using EnVoQbot.AdditionalObjects;
+using DotnetGeminiSDK.Client;
+using System.Diagnostics.Eventing.Reader;
+namespace EnVoQbot.LLM
+{
+    internal class TranslationAgent
+    {
+        private static readonly GeminiClient gClient = new GeminiClient(new GoogleGeminiConfig() {
+            ApiKey = ConnectionsData.ApiKey,
+            TextBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash"
+        });
+        internal async static Task<string?> TranslateAsync(string input, string Language)
+        {
+            var systemPrompt = @"You are a multilingual translation expert. 
+                Your job is to translate words and phrases from English into {language} while preserving meaning.
+                - If the input contains idioms, translate them into culturally equivalent phrases instead of a literal word-for-word translation.
+                - If the input has multiple meanings, provide the most common translation.
+                - If the input is unclear, inconsistent or not translatable - just return 'NULL'.
+                - Your input looks like this: Translate '{spelling}' from English to {language}.
+                     Format your response as: 'spelling|transcription|translation'. Do not use the
+                     ""|"" character anywhere else and do not add any whitespaces after translation.
+                - All the transcriptions should be made with symbols for the phonemic transcription of English.
+                - Example 1. input:  ""Translate 'food' from English to Ukrainian"". output: ""food|/fuːd/|їжа"". 
+                - Example 2. input: ""Translate 'aldkfjhalskdjhf' from English to Russian"". output: ""NULL"".
+                - You can translate input to more than one word if it`s better for translation accuracy.
+                - Example 3. input: ""Translate 'chase rainbows' from English to Ukrainian"".
+                    output: ""chase rainbows|/tʃeɪs ˈreɪn.bəʊz/|переслідувати нереалістичні цілі"".";
+
+            var userMessage = $"Translate '{input}' from English to {Language}.";
+
+            var response = await gClient.TextPrompt("SYSTEM PROMPT:\n " + systemPrompt + "\nUSER MESSAGE:\n" + userMessage);
+            
+            if (response != null)
+                return (response.Candidates[0].Content.Parts[0].Text).TrimEnd();
+            else 
+                return null;
+        }
+    }
+}

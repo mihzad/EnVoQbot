@@ -157,7 +157,7 @@ namespace EnVoQbot.BotCommands
 
             if (!Int64.TryParse(update.CallbackQuery!.Data, out englishWordID))
             {
-                Console.WriteLine("EditWord Error: can`t find a chosen word");
+                Console.WriteLine("DeleteWord Error: can`t find a chosen word");
                 BotClient.CommandsCurrentlyExecuting.Remove(this);
                 return;
             }
@@ -188,16 +188,13 @@ namespace EnVoQbot.BotCommands
                    $"DELETE FROM user#{UserID}\n" +
                    $"WHERE EnglishWordID = {englishWordID};\n" +
 
-                    "DECLARE @RemainingPopularity as INT\n" +
-
                     "UPDATE EnglishWords\n" +
-                    "SET NumberOfUsersCurrentlyUsing -= 1,\n" +
-                    "@RemainingPopularity = NumberOfUsersCurrentlyUsing - 1\n" +
+                    "SET NumberOfUsersCurrentlyUsing -= 1\n" +
                    $"WHERE WordID = {englishWordID};\n" +
 
-                    "IF(@RemainingPopularity = 0)\n" +
+                    "\n" +
                     "   DELETE FROM EnglishWords\n" +
-                   $"       WHERE WordID = {englishWordID};\n"
+                   $"       WHERE WordID = {englishWordID} AND NumberOfUsersCurrentlyUsing = 0 AND Spelling LIKE '% %';\n"
                     ,
                     connection: connection
                     );

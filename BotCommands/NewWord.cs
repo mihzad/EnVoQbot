@@ -4,6 +4,8 @@ using Microsoft.Data.SqlClient;
 using System.Text;
 using EnVoQbot.MultiUpdateCommandsStagesEnums;
 using EnVoQbot.AdditionalObjects;
+using EnVoQbot.LLM;
+using Quartz.Util;
 
 namespace EnVoQbot.BotCommands
 {
@@ -29,19 +31,9 @@ namespace EnVoQbot.BotCommands
                     await GetSpellingAsync(update);
                     break;
 
-                case NewWordStages.CheckSpelling:
-                    await CheckSpellingAsync(update);
+                case NewWordStages.ProcessSpelling:
+                    await ProcessSpellingAsync(update);
                     break;
-
-                case NewWordStages.AddNewEnglishWord:
-                    await AddNewEnglishWordAsync(update);
-                    break;
-                
-                case NewWordStages.AddTranslation:
-                    await AddTranslationAsync(update);
-                    break;
-                
-
             }
         }
         private async Task GetSpellingAsync(Update update)
@@ -52,16 +44,25 @@ namespace EnVoQbot.BotCommands
                     "OK, let`s start. Enter the english word`s spelling."
                     );
 
-            currentStage = NewWordStages.CheckSpelling;
+            currentStage = NewWordStages.ProcessSpelling;
             //NextNeededUpdateType = UpdateType.Message, we don`t specify because it`s default.
             BotClient.CommandsCurrentlyExecuting.AddLast(this);
 
             await dataRequesting;
         }
-        private async Task CheckSpellingAsync(Update update)
+        private async Task ProcessSpellingAsync(Update update)
         {
             bool IsTranslationAvailable;
             spelling = update!.Message!.Text;
+            if(spelling.IsNullOrWhiteSpace())
+            {
+                var nextStageMessage = await BotClient.Bot.SendMessage(
+                    chatId: update.Message.Chat.Id,
+                    text: "You`ve entered nothing. Please,type the word you want to add to your "+
+                          "vocabulary or call /cancel to quit this operation."
+                );
+                return;
+            }
 
             using (SqlConnection connection = new SqlConnection(ConnectionsData.DBconnectionString))
             {
@@ -92,33 +93,39 @@ namespace EnVoQbot.BotCommands
                 IsTranslationAvailable = ( ReadedData[1].ToString() != "0" );
             }
 
-            if (englishWordID == 0)//there`s no spelling found, a new english word
-            {
-                var nextDataRequesting = BotClient.Bot.SendMessage(
+            if (englishWordID == 0 || !IsTranslationAvailable)
+            {//word is not in user vocabulary, so we need translation at least => connect to LLM
+                var resp = await TranslationAgent.TranslateAsync(spelling!, "Ukrainian");
+                if (resp == null)
+                {
+                    var sendingErrMessage = BotClient.Bot.SendMessage(
                     chatId: update.Message.Chat.Id,
-                    text: "Interesting word. Never met it before.\n" +
-                    "How is it pronunciated? Please, enter the transcription.\n\n" +
-                    "HINT: visit translate.google.com and type your word there," +
-                    " then you will see the transcription in English language column."
+                    text: "Got an error speaking with Gemini. Please, try again later."
                     );
-
-
-                currentStage = NewWordStages.AddNewEnglishWord;
-                await nextDataRequesting;
-            }
-            else if( ! IsTranslationAvailable)//the word is found in DB, but user didn`t add it to his vocabulary
-            {
-                var nextStageMessage = BotClient.Bot.SendMessage(
+                    BotClient.CommandsCurrentlyExecuting.Remove(this);
+                    await sendingErrMessage;
+                    return;
+                }
+                if (resp == "NULL")
+                {
+                    var wrongInputMessage = await BotClient.Bot.SendMessage(
                     chatId: update.Message.Chat.Id,
-                    text: "Hmm, I remember this one.\n" +
-                    "I`ll add the transcription of it myself.\n" +
-                    "Enter the translation of the word into your native language.\n"
+                    text: "The input you`ve entered is intranslatable. Please, type the existing word you want to add to your " +
+                          "vocabulary or call /cancel to quit this operation."
                     );
-                currentStage = NewWordStages.AddTranslation;
-                await nextStageMessage;
+                    return;
+                }
+                
+                string[] resp_parts = resp.Split("|");
+
+                spelling = resp_parts[0];
+                transcription = resp_parts[1];
+                translation = resp_parts[2];
+
+                await AddWordToUserVocabulary(update!.Message!.From!.Id, update!.Message!.Chat!.Id);
             }
 
-            else // we recognized the word and found it`s translation = it`s already added by the user
+            else // we recognized the word and found it`s translation = it`s already in user vocabulary
             {
                 await BotClient.Bot.SendMessage(
                     chatId: update.Message.Chat.Id,
@@ -129,27 +136,11 @@ namespace EnVoQbot.BotCommands
             }
         }
 
-        private async Task AddNewEnglishWordAsync(Update update)
-        {
 
-            transcription = update!.Message!.Text;
-
-            var nextDataRequesting = BotClient.Bot.SendMessage(
-                chatId: update.Message.Chat.Id,
-                text: 
-                "Mmm-hmm, and please enter the translation of the word into your native language.\n"
-                );
-
-            currentStage = NewWordStages.AddTranslation;
-            await nextDataRequesting;
-        }
-
-        private async Task AddTranslationAsync(Update update)
+        private async Task AddWordToUserVocabulary(long UserID, long ChatID)
         {
             using (SqlConnection connection = new SqlConnection(ConnectionsData.DBconnectionString))
             {
-                translation = update!.Message!.Text;
-
                 var connectionOpening = connection.OpenAsync();
 
                 string commandText = string.Empty;
@@ -162,7 +153,7 @@ namespace EnVoQbot.BotCommands
 
                         "SET @EnglishWordID = SCOPE_IDENTITY();\n" +
 
-                       $"INSERT INTO user#{update.Message.From!.Id}\n" +
+                       $"INSERT INTO user#{UserID}\n" +
                        $"   VALUES (@EnglishWordID, N'{translation}');\n";
                 else //english word exists, adding translation and increasing popularity
                     commandText =
@@ -170,7 +161,7 @@ namespace EnVoQbot.BotCommands
                         "SET NumberOfUsersCurrentlyUsing += 1\n" +
                        $"WHERE WordID = {englishWordID};\n" +
 
-                       $"INSERT INTO user#{update.Message.From!.Id}\n" +
+                       $"INSERT INTO user#{UserID}\n" +
                        $"VALUES ({englishWordID}, N'{translation}');\n";
 
                 var addWord = new SqlCommand(
@@ -183,9 +174,9 @@ namespace EnVoQbot.BotCommands
                 var addingWord = addWord.ExecuteNonQueryAsync();
 
                 var executionFinishedMessaging = BotClient.Bot.SendMessage(
-                chatId: update.Message.Chat.Id,
+                chatId: ChatID,
                 text:
-                "New word is successfully added. See /help for instructions."
+                $"New word, {spelling} | {transcription} | {translation}, is successfully added. See /help for instructions."
                 );
                 await addingWord;
                 await executionFinishedMessaging;

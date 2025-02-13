@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotnetGeminiSDK" Version="1.0.14" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="Quartz" Version="3.13.1" />
     <PackageReference Include="Quartz.Serialization.Json" Version="3.13.1" />

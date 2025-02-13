@@ -9,8 +9,6 @@ namespace EnVoQbot.MultiUpdateCommandsStagesEnums
     internal enum NewWordStages
     {
         GetSpelling,
-        CheckSpelling,
-        AddNewEnglishWord,
-        AddTranslation
+        ProcessSpelling
     }
 }
