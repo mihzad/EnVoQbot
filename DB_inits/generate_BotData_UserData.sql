@@ -1,7 +1,7 @@
 USE [EnVoQbot_DB]
 GO
 
-/****** Object:  Table [dbo].[UserData]    Script Date: 10.02.2025 14:23:06 ******/
+/****** Object:  Table [dbo].[UserData]    Script Date: 19.03.2025 10:12:30 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -12,10 +12,20 @@ CREATE TABLE [dbo].[UserData](
 	[UserTelegramID] [bigint] NOT NULL,
 	[Username] [nvarchar](100) NULL,
 	[TimeZoneID] [nvarchar](max) NULL,
+	[LanguageID] [int] NOT NULL,
+	[GenerationPreferences] [nvarchar](max) NULL,
  CONSTRAINT [PK_UserData] PRIMARY KEY CLUSTERED 
 (
 	[UserTelegramID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+ALTER TABLE [dbo].[UserData]  WITH CHECK ADD  CONSTRAINT [FK_UserData_Languages] FOREIGN KEY([LanguageID])
+REFERENCES [dbo].[Languages] ([ID])
+GO
+
+ALTER TABLE [dbo].[UserData] CHECK CONSTRAINT [FK_UserData_Languages]
+GO
+
 
