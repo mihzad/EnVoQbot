@@ -31,7 +31,6 @@ namespace EnVoQbot.BotCommands
         }
         private Message? messageWithInlineKeyboardToDelete = null;
 
-        private long ChatID { get; set; }
 
         private SetQuizzesScheduleStages currentStage = SetQuizzesScheduleStages.SetUpChoosingKeyboard;
         private DayOfWeekScheduleData? currentScheduledDay = null;
@@ -269,7 +268,7 @@ namespace EnVoQbot.BotCommands
                 return;
             }
 
-            string userKey = $"user#{UserID}";
+            string userKey = $"vocabulary#{UserID}";
             var deletingPreviousSchedule = BotClient.QuizzesScheduler!.DeleteJob(new JobKey(userKey));
 
             IJobDetail userJob = JobBuilder.Create<GeneratePollsJob>()
@@ -379,7 +378,7 @@ namespace EnVoQbot.BotCommands
                 if (dayData.isDayScheduled)
                 {
                     var askingForScheduleTime = BotClient.Bot.SendMessage(
-                    chatId: update.CallbackQuery!.Message!.Chat.Id,
+                    chatId: ChatID,
                     text: $"Now type time you would like to receive your tests on {dayData.dayName}.\n" +
                     "Enter time in 24-hours format, hours and minutes:\n" +
                     "10:00, 15:25, 23:41, ..."
@@ -396,7 +395,7 @@ namespace EnVoQbot.BotCommands
             }
 
             var informingThereIsNoDayChosen = BotClient.Bot.SendMessage(
-                chatId: update.CallbackQuery!.Message!.Chat.Id,
+                chatId: ChatID,
                 text: "No schedule added because no day to schedule was chosen."
                 );
 

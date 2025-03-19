@@ -17,7 +17,7 @@ namespace EnVoQbot.BotCommands
                    text: "Here's the list of detailed descriptions of my commands:\n\n" +
 
                    "/addword\n" +
-                   "trarara"
+                   "[not completed yet XD]"
                    );
         }
     }

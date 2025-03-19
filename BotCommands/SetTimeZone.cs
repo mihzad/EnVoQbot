@@ -31,7 +31,6 @@ namespace EnVoQbot.BotCommands
         }
         private Message? messageWithInlineKeyboardToDelete = null;
 
-        private long ChatID { get; set; }
 
         private SetTimeZoneStages currentStage = SetTimeZoneStages.ChooseTimeZone;
 
@@ -87,9 +86,10 @@ namespace EnVoQbot.BotCommands
 
                 var setTimeZoneCommand = new SqlCommand(
                     cmdText:
-                        "UPDATE UserData \n" +
-                       $"SET TimeZoneID = '{update.CallbackQuery!.Data!}'\n" +
-                       $"WHERE UserTelegramID = '{UserID}'\n",
+                        @$"UPDATE UserData
+                            SET TimeZoneID = '{update.CallbackQuery!.Data!}'
+                            WHERE UserTelegramID = '{UserID}'
+                        ",
 
                     connection: connection
                     );
@@ -114,7 +114,7 @@ namespace EnVoQbot.BotCommands
         {
             try
             {
-                string userKey = $"user#{UserID}";
+                string userKey = $"vocabulary#{UserID}";
 
                 var triggersToChange = await BotClient.QuizzesScheduler!.GetTriggersOfJob(new JobKey(userKey));
 
@@ -137,7 +137,7 @@ namespace EnVoQbot.BotCommands
                         )
                         .UsingJobData(tr.JobDataMap)
                         .Build();
-                    Console.WriteLine(newTriggers[i].ToString());
+                    //Console.WriteLine(newTriggers[i].ToString());
                 }
 
                 for (int i = 0; i < triggersToChange.Count; i++)

@@ -4,6 +4,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Quartz;
 using EnVoQbot.AdditionalObjects;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace EnVoQbot
 {

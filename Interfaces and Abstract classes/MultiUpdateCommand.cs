@@ -11,6 +11,7 @@ namespace EnVoQbot
     internal abstract class MultiUpdateCommand : BotCommand
     {
         internal long UserID { get; set; }
+        internal long ChatID { get; set; }
 
         //here we specify what update type we expect. Default: message.
         internal UpdateType NeededUpdateType { get; set; } = UpdateType.Message;

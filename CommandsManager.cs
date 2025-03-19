@@ -38,7 +38,7 @@ namespace EnVoQbot
                             switch (newCommandName)
                             {
                                 case "/start":
-                                    await (new Start()).ExecuteAsync(update);
+                                    await (new Start(userID, chatID)).ExecuteAsync(update);
                                     break;
 
                                 case "/help":
@@ -46,11 +46,11 @@ namespace EnVoQbot
                                     break;
 
                                 case "/addword":
-                                    await (new AddWord(userID)).ExecuteAsync(update);
+                                    await (new AddWord(userID, chatID)).ExecuteAsync(update);
                                     break;
 
                                 case "/deleteword":
-                                    await (new DeleteWord(userID)).ExecuteAsync(update);
+                                    await (new DeleteWord(userID, chatID)).ExecuteAsync(update);
                                     break;
 
                                 case "/settimezone":
@@ -59,6 +59,9 @@ namespace EnVoQbot
 
                                 case "/setquizzesschedule":
                                     await (new SetQuizzesSchedule(userID, chatID)).ExecuteAsync(update);
+                                    break;
+                                case "/setlanguage":
+                                    await (new SetUserLanguage(userID, chatID)).ExecuteAsync(update);
                                     break;
 
                                 default:
@@ -69,8 +72,16 @@ namespace EnVoQbot
 
                     }
             if (cmd != null)
+            {
                 if (update.Type == cmd.NeededUpdateType)//if there is a command to execute and it hasn`t been canceled
                     await cmd.ExecuteAsync(update);
+                else if (cmd is Start)
+                    await BotClient.Bot.SendMessage(
+                        chatId: chatID,
+                        text:
+                        "Please, choose your native language.\n" +
+                        "It is necessary for me to be able to translate the words you want to learn."
+                        );
                 else
                     await BotClient.Bot.SendMessage(
                         chatId: chatID,
@@ -78,6 +89,8 @@ namespace EnVoQbot
                         "Can`t execute another commands because this one is already being executed.\n" +
                         "/cancel this one before choosing another."
                         );
+            }
+               
 
 
         }
@@ -102,8 +115,9 @@ namespace EnVoQbot
             else
             {//update.Type == UpdateType.CallbackQuery
                 if (update.CallbackQuery == null ||
-                    update.CallbackQuery.Message == null)
-                    // => message is acceptable, because it`s bot`s message.
+                    update.CallbackQuery.Message == null ||
+                    update.CallbackQuery.Data == null)
+                    
                 {
                     userID = -1;
                     chatID = -1;
@@ -122,8 +136,18 @@ namespace EnVoQbot
         {
             if(cmd != null)
             {
+                if (cmd is Start)
+                {
+                    await BotClient.Bot.SendMessage(
+                        chatId: cmd.ChatID,
+                        text:
+                        "Startup command cannot be cancelled."
+                        );
+                    return;
+                }
+                    
                 var messageSending = BotClient.Bot.SendMessage(
-                    chatId: update!.Message!.Chat.Id,
+                    chatId: cmd.ChatID,
                     text:
                     "The command has been canceled. See /help for instructions."
                     );

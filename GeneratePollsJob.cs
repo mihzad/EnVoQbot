@@ -62,11 +62,11 @@ namespace EnVoQbot
                     cmdText:
                     "SELECT COUNT (*)\n" +
                     "FROM EnglishWords\n" +
-                   $"INNER JOIN user#{userID} On EnglishWords.WordID = user#{userID}.EnglishWordID;\n" +
+                   $"INNER JOIN vocabulary#{userID} On EnglishWords.WordID = vocabulary#{userID}.EnglishWordID;\n" +
 
-                   $"SELECT EnglishWords.WordID, EnglishWords.Spelling, EnglishWords.Transcription, user#{userID}.Translation\n" +
+                   $"SELECT EnglishWords.WordID, EnglishWords.Spelling, EnglishWords.Transcription, vocabulary#{userID}.Translation\n" +
                     "FROM EnglishWords\n" +
-                   $"INNER JOIN user#{userID} On EnglishWords.WordID = user#{userID}.EnglishWordID;\n"
+                   $"INNER JOIN vocabulary#{userID} On EnglishWords.WordID = vocabulary#{userID}.EnglishWordID;\n"
                 ,
                 connection: connection
                     );
@@ -125,7 +125,7 @@ namespace EnVoQbot
 
             Shuffle(randomizer, possibleAnswerStrings);
 
-            //Convert strings to InputPollOption accorging to the new tgbotapi version
+            //сonvert strings to InputPollOption
             InputPollOption[] possibleAnswers = new InputPollOption[quizAnswersCount];
             for (int i = 0; i < quizAnswersCount; i++)
                 possibleAnswers[i] = new InputPollOption(possibleAnswerStrings[i]);
