@@ -4,8 +4,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Quartz;
 using EnVoQbot.AdditionalObjects;
-using System.Diagnostics;
-using System.Globalization;
 
 namespace EnVoQbot
 {
@@ -17,6 +15,7 @@ namespace EnVoQbot
 
         public static async Task Start()
         {
+
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             var schedulerSettingUp = JobScheduler.SetUp();
@@ -41,7 +40,7 @@ namespace EnVoQbot
         {
             Console.WriteLine(ex.Message);
             Console.WriteLine(ex.StackTrace);
-            throw new NotImplementedException();
+            throw ex;
         }
 
         private static async Task UpdateHandlerAsync(ITelegramBotClient bot, Update update, CancellationToken arg3)

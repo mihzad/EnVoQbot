@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+
 
 namespace EnVoQbot.AdditionalObjects
 {
@@ -10,8 +7,15 @@ namespace EnVoQbot.AdditionalObjects
     {
         public WordData() { }
 
+        [JsonProperty]
         internal string? Spelling { get; set; }
+
+
+        [JsonProperty]
         internal string? Transcription { get; set; }
+
+
+        [JsonProperty]
         internal string? Translation { get; set; }
     }
 }

@@ -35,39 +35,50 @@ namespace EnVoQbot
 
                         if (cmd == null)// need new command
                         {
+                            BotCommand new_cmd;
                             switch (newCommandName)
                             {
                                 case "/start":
-                                    await (new Start(userID, chatID)).ExecuteAsync(update);
+                                    new_cmd = new Start(userID, chatID);
                                     break;
 
                                 case "/help":
-                                    await (new Help()).ExecuteAsync(update);
+                                    new_cmd = new Help();
                                     break;
 
-                                case "/addword":
-                                    await (new AddWord(userID, chatID)).ExecuteAsync(update);
+                                case "/add_word":
+                                    new_cmd = new AddWord(userID, chatID);
                                     break;
 
-                                case "/deleteword":
-                                    await (new DeleteWord(userID, chatID)).ExecuteAsync(update);
+                                case "/delete_word":
+                                    new_cmd = new DeleteWord(userID, chatID);
                                     break;
 
-                                case "/settimezone":
-                                    await (new SetTimeZone(userID, chatID)).ExecuteAsync(update);
+                                case "/set_timezone":
+                                    new_cmd = new SetTimeZone(userID, chatID);
                                     break;
 
-                                case "/setquizzesschedule":
-                                    await (new SetQuizzesSchedule(userID, chatID)).ExecuteAsync(update);
+                                case "/set_quizzes_schedule":
+                                    new_cmd = new SetQuizzesSchedule(userID, chatID);
                                     break;
-                                case "/setlanguage":
-                                    await (new SetUserLanguage(userID, chatID)).ExecuteAsync(update);
+
+                                case "/set_language":
+                                    new_cmd = new SetUserLanguage(userID, chatID);
+                                    break;
+
+                                case "/update_preferences":
+                                    new_cmd = new UpdatePreferences(userID, chatID);
+                                    break;
+
+                                case "/clear_preferences":
+                                    new_cmd = new ClearPreferences(userID, chatID);
                                     break;
 
                                 default:
-                                    continue;
+                                    return;//no command to execute.
                             }
-                            return;// we already found a new command, only one per message can be executed
+                            await new_cmd.ExecuteAsync(update);
+                            return;
                         }
 
                     }

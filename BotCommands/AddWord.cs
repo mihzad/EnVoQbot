@@ -6,7 +6,6 @@ using EnVoQbot.MultiUpdateCommandsStagesEnums;
 using EnVoQbot.AdditionalObjects;
 using EnVoQbot.LLM;
 using Quartz.Util;
-using Microsoft.Identity.Client;
 
 namespace EnVoQbot.BotCommands
 {
@@ -66,6 +65,15 @@ namespace EnVoQbot.BotCommands
                     chatId: ChatID,
                     text: "You`ve entered nothing. Please,type the word you want to add to your "+
                           "vocabulary or call /cancel to quit this operation."
+                );
+                return;
+            }
+            if (spelling!.Length >= 100)
+            {
+                var nextStageMessage = await BotClient.Bot.SendMessage(
+                    chatId: ChatID,
+                    text: "The input you`ve entered is too long. please, write shorter one " +
+                          "or call /cancel to quit this operation."
                 );
                 return;
             }

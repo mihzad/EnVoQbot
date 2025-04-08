@@ -1,19 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
-using DotnetGeminiSDK.Client.Interfaces;
-using DotnetGeminiSDK.Config;
-using Newtonsoft.Json;
-using System.Text;
+﻿using DotnetGeminiSDK.Config;
 using EnVoQbot.AdditionalObjects;
 using DotnetGeminiSDK.Client;
-using System.Diagnostics.Eventing.Reader;
 namespace EnVoQbot.LLM
 {
     internal class TranslationAgent
     {
         private static readonly GeminiClient gClient = new GeminiClient(new GoogleGeminiConfig() {
             ApiKey = ConnectionsData.ApiKey,
-            TextBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash"
+            TextBaseUrl = ConnectionsData.LLMURL
         });
         internal async static Task<string?> TranslateAsync(string input, string Language)
         {

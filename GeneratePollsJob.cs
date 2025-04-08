@@ -1,46 +1,49 @@
 ﻿using EnVoQbot.AdditionalObjects;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualBasic;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using EnVoQbot.LLM;
 namespace EnVoQbot
 {
     internal class GeneratePollsJob : IJob
     {
+        private long UserID = 0;
+        private long ChatID = 0;
+
+        private int UserLanguageID = 0;
+        private string UserLanguage = string.Empty;
+
+        private int QuizzesCount = 0;
         public async Task Execute(IJobExecutionContext context)
         {
             try
             {
                 JobDataMap dataMap = context.MergedJobDataMap;
 
-                long chatID = dataMap.GetLong("chatID");
-                long userID = dataMap.GetLong("userID");
-                int quizzesCount = dataMap.GetInt("quizzesCount");
+                ChatID = dataMap.GetLong("ChatID");
+                UserID = dataMap.GetLong("UserID");
+                QuizzesCount = dataMap.GetInt("QuizzesCount");
 
-                WordData[]? userVocabulary = await GetUserVocabulary(userID);
+                WordData[]? userVocabulary = await GetUserVocabulary();
 
                 if (userVocabulary == null)
                 {
                     await BotClient.Bot.SendMessage(
-                            chatId: chatID,
-                            text: "You have less than three words in your vocabulary.\n" +
+                            chatId: ChatID,
+                            text: "You have less than five words in your vocabulary.\n" +
                             " Add some more if you want me to create quizzes."
                             );
                     return;
                 }
 
                 var random = Random.Shared;
-                while (quizzesCount > 0)
+                while (QuizzesCount > 0)
                 {
-                    await GenerateQuiz(new Random(random.Next()), userVocabulary, chatID);
-                    quizzesCount--;// proceed to next quiz creation.
+                    await GenerateQuiz(new Random(random.Next()), userVocabulary);
+                    QuizzesCount--;// proceed to next quiz creation.
                 }
             }
             catch (Exception ex)
@@ -51,7 +54,7 @@ namespace EnVoQbot
             }
         }
 
-        private async Task<WordData[]?> GetUserVocabulary(long userID)
+        private async Task<WordData[]?> GetUserVocabulary()
         {
             WordData[] userVocabulary;
             using (SqlConnection connection = new SqlConnection(ConnectionsData.DBconnectionString))
@@ -59,26 +62,38 @@ namespace EnVoQbot
                 var connectionOpening = connection.OpenAsync();
 
                 var getVocabulary = new SqlCommand(
-                    cmdText:
-                    "SELECT COUNT (*)\n" +
-                    "FROM EnglishWords\n" +
-                   $"INNER JOIN vocabulary#{userID} On EnglishWords.WordID = vocabulary#{userID}.EnglishWordID;\n" +
+                    cmdText: $@"
+                        SELECT COUNT (*)
+                            FROM vocabulary#{UserID};
 
-                   $"SELECT EnglishWords.WordID, EnglishWords.Spelling, EnglishWords.Transcription, vocabulary#{userID}.Translation\n" +
-                    "FROM EnglishWords\n" +
-                   $"INNER JOIN vocabulary#{userID} On EnglishWords.WordID = vocabulary#{userID}.EnglishWordID;\n"
-                ,
+                        SELECT Languages.ID, Languages.Name
+                            FROM Languages INNER JOIN UserData ON Languages.ID = UserData.LanguageID
+                            WHERE UserTelegramID = {UserID};
+
+                        SELECT EnglishWords.Spelling, EnglishWords.Transcription, Translations.Translation
+                        FROM Translations
+                            INNER JOIN vocabulary#{UserID} ON Translations.ID = vocabulary#{UserID}.TranslationID
+                            INNER JOIN EnglishWords ON Translations.WordID = EnglishWords.ID;
+                    ",
                 connection: connection
                     );
 
                 await connectionOpening;
 
                 var dataReader = await getVocabulary.ExecuteReaderAsync();
-                dataReader.Read();
+                await dataReader.ReadAsync();
                 var userVocabularySize = dataReader.GetInt32(0);
 
-                if (userVocabularySize < 3) return null;
-                dataReader.NextResult();
+                if (userVocabularySize < 5) return null;
+
+
+                await dataReader.NextResultAsync();
+                await dataReader.ReadAsync();
+                UserLanguageID = dataReader.GetInt32(0);
+                UserLanguage = dataReader.GetString(1);
+
+
+                await dataReader.NextResultAsync();
 
                 userVocabulary = new WordData[userVocabularySize];
                 for(int i = 0; i < userVocabularySize; i++)
@@ -86,42 +101,51 @@ namespace EnVoQbot
 
                 for (int i = 0; i < userVocabularySize; i++)
                 {
-                    dataReader.Read();//data reader has rows because userVocabularySize >= 3.
-                    userVocabulary[i].Spelling = dataReader.GetString(1);
-                    userVocabulary[i].Transcription = dataReader.GetString(2);
-                    userVocabulary[i].Translation = dataReader.GetString(3);
+                    await dataReader.ReadAsync();//data reader has rows because userVocabularySize >= 3.
+                    userVocabulary[i].Spelling = dataReader.GetString(0);
+                    userVocabulary[i].Transcription = dataReader.GetString(1);
+                    userVocabulary[i].Translation = dataReader.GetString(2);
                 }
             }
             return userVocabulary;
         }
 
-        private async Task GenerateQuiz(Random randomizer, WordData[] userVocabulary, long chatID)
+        private async Task GenerateQuiz(Random randomizer, WordData[] userVocabulary)
         {
-            var quizAnswersCount = randomizer.Next(2, Math.Min(10, userVocabulary.Length) + 1); //2 <= quizAnswersCount <= Min(10, userVocabularySize)
+            //2 <= quizAnswersCount <= Min(10, userVocabularySize)
+            var quizAnswersCount = randomizer.Next(2, Math.Min(10, userVocabulary.Length) + 1);
 
-            int[] possibleAnswersIndexes = new int[quizAnswersCount];
-            //possibleAnswersIndexes stores index number in userVocabulary for each word used as answer in the quiz.
-            string[] possibleAnswerStrings = new string[quizAnswersCount]; // stores answers (word translations)
-
-            //choose correct answer
-            var correctAnswerIndex = randomizer.Next(userVocabulary.Length);// 0 <= correctAnswerIndex < userVocabularySize
-            WordData correctAnswerData = userVocabulary[correctAnswerIndex];
-
-            //We fill our array in order to use contains(). By the time, we guarantee quiz WILL HAVE correct answer.
-            for (int i = 0; i < possibleAnswersIndexes.Length; i++)
-                possibleAnswersIndexes[i] = correctAnswerIndex;
+            int[] quizDataIndexes = new int[quizAnswersCount]; //auto-filled with 0s
             
-            for (int i = 1; i < possibleAnswersIndexes.Length; i++)
+            for (int i = 1; i < quizDataIndexes.Length; i++)
             {
-                //choose the rest of answers
+                //choose the words for Gemini to generate poll from
                 int newIndex = randomizer.Next(userVocabulary.Length);
-                while (possibleAnswersIndexes.Contains(newIndex)) // guarantee quiz will have ONLY ONE correct answer,
-                    newIndex = randomizer.Next(userVocabulary.Length);// because answers won`t be repeated.
-                possibleAnswersIndexes[i] = newIndex;
+                while (quizDataIndexes.Contains(newIndex)) // words won`t be repeated.
+                    newIndex = randomizer.Next(userVocabulary.Length);
+                quizDataIndexes[i] = newIndex;
             }
 
+            WordData[] quizData = new WordData[quizAnswersCount];
+            for (int i = 0; i < quizData.Length; i++)
+                quizData[i] = userVocabulary[quizDataIndexes[i]];
+
+            var quizDataStr = JsonConvert.SerializeObject(quizData);
+
+            var response = await QuizGenerationAgent.GenerateAsync(quizDataStr, UserLanguage, "- Likes jokes and funny situations. ");
+            
+            if (response == null)
+            {
+                await BotClient.Bot.SendMessage(
+                chatId: ChatID,
+                text: "Could not generate the test: got an error speaking with Gemini."
+                );
+                return;
+            }
+
+            var possibleAnswerStrings = new string[quizAnswersCount];
             for (int i = 0; i < quizAnswersCount; i++)
-                possibleAnswerStrings[i] = userVocabulary[possibleAnswersIndexes[i]].Translation!;
+                possibleAnswerStrings[i] = quizData[i].Spelling!;
 
             Shuffle(randomizer, possibleAnswerStrings);
 
@@ -131,13 +155,13 @@ namespace EnVoQbot
                 possibleAnswers[i] = new InputPollOption(possibleAnswerStrings[i]);
 
             await BotClient.Bot.SendPoll(
-                chatId: chatID,
-                question: $"What is correct translation of {correctAnswerData.Spelling} [{correctAnswerData.Transcription}]?",
+                chatId: ChatID,
+                question: response.Value.Question,
                 options: possibleAnswers,
                 isAnonymous: true,
                 type: PollType.Quiz,
-                correctOptionId: FindId(possibleAnswerStrings, correctAnswerData.Translation!), // answers are translations, so we use translation to find.
-                explanation: "there i will explain smth",
+                correctOptionId: FindId(possibleAnswerStrings, response.Value.AnswerSpelling), // answers are translations, so we use translation to find.
+                explanation: response.Value.Explanation,
                 explanationParseMode: ParseMode.Html,
                 protectContent: true
                 );

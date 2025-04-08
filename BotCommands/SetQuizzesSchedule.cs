@@ -273,8 +273,8 @@ namespace EnVoQbot.BotCommands
 
             IJobDetail userJob = JobBuilder.Create<GeneratePollsJob>()
                         .WithIdentity(userKey)
-                        .UsingJobData("userID", $"{UserID}")
-                        .UsingJobData("chatID", $"{ChatID}")
+                        .UsingJobData("UserID", $"{UserID}")
+                        .UsingJobData("ChatID", $"{ChatID}")
                         .Build();
             
             await deletingPreviousSchedule;
@@ -295,7 +295,7 @@ namespace EnVoQbot.BotCommands
                         CronScheduleBuilder.WeeklyOnDayAndHourAndMinute(thisDay, hour, minute)
                         .InTimeZone(userTimeZone!)
                         )
-                    .UsingJobData("quizzesCount", $"{dayData.QuizzesCount}")
+                    .UsingJobData("QuizzesCount", $"{dayData.QuizzesCount}")
                     .Build();
 
                     await BotClient.QuizzesScheduler!.ScheduleJob(userJob, dayTrigger);

@@ -2,11 +2,8 @@
 using EnVoQbot.LLM;
 using EnVoQbot.MultiUpdateCommandsStagesEnums;
 using Microsoft.Data.SqlClient;
-using System.Globalization;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace EnVoQbot.BotCommands
 {

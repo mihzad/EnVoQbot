@@ -1,4 +1,6 @@
-﻿namespace EnVoQbot.AdditionalObjects
+﻿
+
+namespace EnVoQbot.AdditionalObjects
 {
     internal class DayOfWeekScheduleData
     {
