@@ -1,4 +1,4 @@
-This is English Vocabulary Quizzes telegram bot. It is implemented to help with vocabulary practicing.
+English Vocabulary Quizzes telegram bot, powered with Gemini for quiz generation and Quartz for flexible schedule setup.
 
 Working principle is simple: 
 1) User enters a set of words he/she wishes to practice (it can be changed at any time)
