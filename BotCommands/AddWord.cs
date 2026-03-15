@@ -6,6 +6,7 @@ using EnVoQbot.MultiUpdateCommandsStagesEnums;
 using EnVoQbot.AdditionalObjects;
 using EnVoQbot.LLM;
 using Quartz.Util;
+using System.Data;
 
 namespace EnVoQbot.BotCommands
 {
@@ -229,20 +230,20 @@ namespace EnVoQbot.BotCommands
             if (EnglishWordID == 0)//add new english word + translation to it
             {
                 cmdText = @$"
-                    DECLARE @EnglishWordID BIGINT
+                    DECLARE @GeneratedEnglishWordID BIGINT
                     DECLARE @TranslationID BIGINT
 
                     INSERT INTO EnglishWords (Spelling, Transcription, Popularity)
-                        VALUES (N'{spelling}', N'{transcription}', '0');
+                        VALUES (@Spelling, @Transcription, '0');
 
-                    SET @EnglishWordID = SCOPE_IDENTITY();
+                    SET @GeneratedEnglishWordID = SCOPE_IDENTITY();
                         
                    
                     INSERT INTO Translations (WordID, LanguageID, Translation, Popularity)
-                            VALUES (@EnglishWordID, {UserLanguageID}, N'{translation}', 0);
+                            VALUES (@GeneratedEnglishWordID, @UserLanguageID, @Translation, 0);
 
                     SET @TranslationID = SCOPE_IDENTITY();
-                    SELECT @EnglishWordID, @TranslationID
+                    SELECT @GeneratedEnglishWordID, @TranslationID
                 ";
             }
             else //english word exists => adding translation
@@ -251,7 +252,7 @@ namespace EnVoQbot.BotCommands
                     DECLARE @TranslationID BIGINT
 
                     INSERT INTO Translations (WordID, LanguageID, Translation, Popularity)
-                         VALUES ({EnglishWordID}, {UserLanguageID}, N'{translation}', 0);
+                         VALUES (@EnglishWordID, @UserLanguageID, @Translation, 0);
 
                     SET @TranslationID = SCOPE_IDENTITY();
                     SELECT CAST(0 AS BIGINT), @TranslationID;
@@ -261,6 +262,11 @@ namespace EnVoQbot.BotCommands
                 cmdText: cmdText,
                 connection: DBconnection
                 );
+            addWord.Parameters.Add("@Spelling", SqlDbType.NVarChar, -1).Value = spelling;
+            addWord.Parameters.Add("@Transcription", SqlDbType.NVarChar, -1).Value = transcription;
+            addWord.Parameters.Add("@Translation", SqlDbType.NVarChar, -1).Value = translation;
+            addWord.Parameters.Add("@EnglishWordID", SqlDbType.BigInt).Value = EnglishWordID;
+            addWord.Parameters.Add("@UserLanguageID", SqlDbType.BigInt).Value = UserLanguageID;
 
             using (SqlDataReader ReadedData = await addWord.ExecuteReaderAsync())
             {
